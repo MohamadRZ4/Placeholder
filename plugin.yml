@@ -1,6 +1,6 @@
 ---
 name: Placeholder
-version: 0.0.1
+version: 1.0.0
 main: MohamadRZ\Placeholder\Main
 api: 3.0.0
 ...
