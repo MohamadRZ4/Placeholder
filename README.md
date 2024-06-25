@@ -37,7 +37,7 @@ class ExamplePlaceholder implements PlaceholderProvider {
 
 #### Using Placeholders in Scoreboard
 
-Integrate placeholders into your scoreboard configuration (`config.yml`):
+Integrate placeholders into your [scoreboard](https://github.com/MohamadRZ4/Scoreboard) configuration (`config.yml`):
 
 ```yaml
 scoreboard_lines:
