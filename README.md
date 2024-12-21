@@ -7,7 +7,6 @@ PlaceholderAPI is a powerful and flexible placeholder system for PocketMine-MP. 
 - **Dynamic Placeholder Replacement**: Easily replace placeholders with values in messages, commands, and more.
 - **Custom Placeholder Support**: Create and register your own placeholders.
 - **Cache Management**: Efficient caching system to improve performance and reduce redundant processing.
-- **Multi-Page Listing**: List placeholders in paginated format with easy navigation.
 - **Advanced API**: Provides a clean and simple API to integrate placeholders into your PocketMine-MP plugins.
 
 ## Installation
