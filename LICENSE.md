@@ -17,5 +17,4 @@ This software is provided "as is," without any warranty of any kind, either expr
 
 By using this software, you agree to be bound by the terms of this license. If you do not agree to these terms, you are not authorized to use this software.
 
-For any requests for permission or inquiries about this software, please contact [Your Contact Information].
 
