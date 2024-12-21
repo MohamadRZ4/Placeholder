@@ -1,6 +1,20 @@
----
-name: Placeholder
-version: 1.0.0
-main: MohamadRZ\Placeholder\Main
-api: 3.0.0
-...
+name: PlaceholderAPI
+version: 2.0.0
+main: MohamadRZ4\Placeholder\PlaceholderAPI
+api: 5.0.0
+src-namespace-prefix: MohamadRZ4\Placeholder
+description: "|
+  A powerful and flexible placeholder system for PocketMine-MP.
+  Easily manage placeholders and replace them dynamically in messages, commands, and more.
+  Supports custom placeholders and cache management for high performance.
+  
+  Get started quickly and unlock endless possibilities with PlaceholderAPI!"
+
+author: MohamadRZ4
+repository: https://github.com/MohamadRZ4/Placeholder
+bugs: https://github.com/MohamadRZ4/Placeholder/issues
+
+permissions:
+  placeholder.command:
+    description: Allows access to PlaceholderAPI commands
+    default: op
