@@ -1,66 +1,53 @@
-### Placeholder Plugin for PocketMine-MP
+# PlaceholderAPI
 
-This plugin provides a powerful placeholder API for creating dynamic placeholders in PocketMine-MP servers.
+PlaceholderAPI is a powerful and flexible placeholder system for PocketMine-MP. It allows you to easily manage placeholders and dynamically replace them in messages, commands, and more. Whether you're creating a server with custom features or just want to improve the player experience, PlaceholderAPI has you covered!
 
-### Features
+## Features
 
-- **Dynamic Placeholder Support:** Easily create custom placeholders using callbacks.
-- **Integration with Scoreboard:** Seamlessly integrate placeholders into your scoreboard plugin for displaying dynamic player information.
-- **Flexible Configuration:** Configure placeholders and their behavior directly through the `config.yml` file.
-- **Compatible with PocketMine-MP:** Designed for compatibility with PocketMine-MP server software.
+- **Dynamic Placeholder Replacement**: Easily replace placeholders with values in messages, commands, and more.
+- **Custom Placeholder Support**: Create and register your own placeholders.
+- **Cache Management**: Efficient caching system to improve performance and reduce redundant processing.
+- **Multi-Page Listing**: List placeholders in paginated format with easy navigation.
+- **Advanced API**: Provides a clean and simple API to integrate placeholders into your PocketMine-MP plugins.
 
-### Installation
+## Installation
 
-1. Download the latest release from the [releases page](https://github.com/MohamadRZ4/Placeholder/releases).
-2. Place the `Placeholder` folder into your PocketMine-MP `plugins` directory.
-3. Restart your server to load the plugin.
+### Requirements
+- PocketMine-MP 5.16.1 or higher
 
-### Usage
+### Steps
+1. Download the latest release of PlaceholderAPI from the [Releases page](https://github.com/yourusername/PlaceholderAPI/releases).
+2. Place the `.phar` file in the `plugins/` directory of your PocketMine-MP server.
+3. Start your server, and PlaceholderAPI will be automatically loaded.
 
-#### Creating Custom Placeholders
+### Example Placeholders
+- `%online_players%`: Shows the current number of online players.
+- `%max_players%`: Shows the maximum number of players allowed on the server.
+- `%server_name%`: Displays the name of the server.
 
-You can create custom placeholders by implementing the `PlaceholderProvider` interface:
+### Wiki
+For more detailed documentation and guides, please visit our [wiki](https://github.com/MohamadRZ4/Placeholder/wiki)].
+
+### Placeholder Replacements
+In your plugin or messages, you can use placeholders such as `%online_players%` and `%max_players%`. PlaceholderAPI will automatically replace them with the corresponding values.
 
 ```php
-use MohamadRZ\Placeholder\PlaceholderManager;
-
-class ExamplePlaceholder implements PlaceholderProvider {
-    
-    public function registerPlaceholders(): void {
-        PlaceholderManager::addPlaceholder("EXAMPLE", function($player) {
-            // Replace with your custom logic to return a string value
-            return "Example Placeholder Value";
-        });
-    }
-}
+$text = "%online_players%/%max_players%";
+$processedText = PlaceholderAPI::getInstance()->processPlaceholders($player, $text);
+$this->getLogger()->info(processedText); // Output: 5/100 (Example output)
 ```
-
-#### Using Placeholders in Scoreboard
-
-Integrate placeholders into your [scoreboard](https://github.com/MohamadRZ4/Scoreboard) configuration (`config.yml`):
+### Configuration
+You can configure PlaceholderAPI by editing the config.yml file in the plugins/PlaceholderAPI/ directory. Options include cache expiration time and more.
 
 ```yaml
-scoreboard_lines:
-  - "%EXAMPLE%"
+# PlaceholderAPI Config
+
+# Enable or disable cache expiration
+enable_cache_expiration: true  # Set to false to disable cache expiration
+
+# The time (in seconds) after which the processed cache should be cleared
+cache_expiration_time: 60  # 5 minutes
 ```
-
-### API Documentation
-
-For detailed API usage and available methods, refer to the [API Documentation](https://github.com/MohamadRZ4/Placeholder/wiki).
-
-### Compatibility
-
-- **PocketMine-MP Version:** 1.14 and above
-- **API Version:** 3.0.0 and above
-
-### License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ### Contributing
+We welcome contributions to PlaceholderAPI! If you'd like to help improve the plugin, feel free to fork the repository and create a pull request.
 
-Contributions are welcome! Please fork the repository and submit a pull request with your changes.
-
-### Support
-
-For any questions or issues, please open an [issue](https://github.com/MohamadRZ4/Placeholder/issues) here on GitHub.
