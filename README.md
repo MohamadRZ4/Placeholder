@@ -26,7 +26,7 @@ PlaceholderAPI is a powerful and flexible placeholder system for PocketMine-MP. 
 - `%server_name%`: Displays the name of the server.
 
 ### Wiki
-For more detailed documentation and guides, please visit our [wiki](https://github.com/MohamadRZ4/Placeholder/wiki)].
+For more detailed documentation and guides, please visit our [wiki](https://github.com/MohamadRZ4/Placeholder/wiki).
 
 ### Placeholder Replacements
 In your plugin or messages, you can use placeholders such as `%online_players%` and `%max_players%`. PlaceholderAPI will automatically replace them with the corresponding values.
