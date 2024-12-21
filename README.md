@@ -13,7 +13,7 @@ PlaceholderAPI is a powerful and flexible placeholder system for PocketMine-MP. 
 ## Installation
 
 ### Requirements
-- PocketMine-MP 5.16.1 or higher
+- PocketMine-MP 5.0.0 or higher
 
 ### Steps
 1. Download the latest release of PlaceholderAPI from the [Releases page](https://github.com/yourusername/PlaceholderAPI/releases).
