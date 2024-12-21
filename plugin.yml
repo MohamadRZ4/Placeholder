@@ -13,8 +13,3 @@ description: "|
 author: MohamadRZ4
 repository: https://github.com/MohamadRZ4/Placeholder
 bugs: https://github.com/MohamadRZ4/Placeholder/issues
-
-permissions:
-  placeholder.command:
-    description: Allows access to PlaceholderAPI commands
-    default: op
