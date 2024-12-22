@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MohamadRZ4\Placeholder;
 
-use MohamadRZ4\Placeholder\command\PlaceholderCommand;
 use MohamadRZ4\Placeholder\config\ConfigManager;
 use MohamadRZ4\Placeholder\expansion\GeneralExpansion;
 use MohamadRZ4\Placeholder\expansion\PlaceholderExpansion;
