@@ -1,20 +1,10 @@
-Proprietary License Agreement
+MIT License
 
 Copyright (c) [2024] [MohamadRZ4]
 
-This software is provided to you under the terms of this proprietary license. You are not permitted to copy, distribute, modify, or use the software, or any part of it, for any purpose without prior written permission from the copyright holder.
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-You are allowed to use this software solely for personal, non-commercial purposes, and only in its original, unmodified state.
+The above copyright notice and this permission notice (including the next paragraph) shall be included in all copies or substantial portions of the Software.
 
-You are expressly prohibited from:
-- Copying, distributing, or sharing the source code or any parts of it.
-- Modifying or creating derivative works based on this software.
-- Selling, sublicensing, or otherwise distributing this software, either in whole or in part.
-
-The copyright holder retains all rights to the software, including the right to revoke this license at any time.
-
-This software is provided "as is," without any warranty of any kind, either express or implied, including but not limited to the warranties of merchantability or fitness for a particular purpose.
-
-By using this software, you agree to be bound by the terms of this license. If you do not agree to these terms, you are not authorized to use this software.
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
