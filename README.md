@@ -6,13 +6,7 @@ PlaceholderAPI is a powerful and flexible placeholder system for PocketMine-MP. 
 
 - **Dynamic Placeholder Replacement**: Easily replace placeholders with values in messages, commands, and more.
 - **Custom Placeholder Support**: Create and register your own placeholders.
-- **Cache Management**: Efficient caching system to improve performance and reduce redundant processing.
 - **Advanced API**: Provides a clean and simple API to integrate placeholders into your PocketMine-MP plugins.
-
-## Installation
-
-### Requirements
-- PocketMine-MP 5.0.0 or higher
 
 ### Steps
 1. Download the latest release of PlaceholderAPI from the [Releases page](https://github.com/yourusername/PlaceholderAPI/releases).
@@ -35,18 +29,7 @@ $text = "%online_players%/%max_players%";
 $processedText = PlaceholderAPI::getInstance()->processPlaceholders($player, $text);
 $this->getLogger()->info(processedText); // Output: 5/100 (Example output)
 ```
-### Configuration
-You can configure PlaceholderAPI by editing the config.yml file in the plugins/PlaceholderAPI/ directory. Options include cache expiration time and more.
 
-```yaml
-# PlaceholderAPI Config
-
-# Enable or disable cache expiration
-enable_cache_expiration: true  # Set to false to disable cache expiration
-
-# The time (in seconds) after which the processed cache should be cleared
-cache_expiration_time: 60  # 5 minutes
-```
 ### Contributing
 We welcome contributions to PlaceholderAPI! If you'd like to help improve the plugin, feel free to fork the repository and create a pull request.
 
