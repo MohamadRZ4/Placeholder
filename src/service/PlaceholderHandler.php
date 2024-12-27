@@ -6,12 +6,8 @@ namespace MohamadRZ4\Placeholder\service;
 
 use MohamadRZ4\Placeholder\config\ConfigManager;
 use MohamadRZ4\Placeholder\expansion\PlaceholderExpansion;
-use MohamadRZ4\Placeholder\service\cache\CacheClearTask;
-use MohamadRZ4\Placeholder\service\cache\CacheManager;
 use MohamadRZ4\Placeholder\PlaceholderAPI;
 use pocketmine\player\Player;
-use pocketmine\scheduler\TaskScheduler;
-use pocketmine\Server;
 
 class PlaceholderHandler
 {
@@ -24,27 +20,13 @@ class PlaceholderHandler
 
 	private array $placeholders = [];
 	private ConfigManager $configManager;
-	private CacheManager $cacheManager;
-	public function __construct(ConfigManager $configManager, CacheManager $cacheManager)
+	public function __construct(ConfigManager $configManager)
 	{
 		$this->configManager = $configManager;
-		$this->cacheManager = $cacheManager;
-
-		$cacheExpirationTime = $this->configManager->getCacheExpirationTime();
-
-		if ($cacheExpirationTime > 0) {
-			PlaceholderAPI::getInstance()->getScheduler()->scheduleRepeatingTask(new CacheClearTask($this), 20 * $cacheExpirationTime);
-		}
 	}
 
 	public function replacePlaceholders(?Player $player, string $text, PlaceholderExpansion $expansion): string
 	{
-		$cache = $this->cacheManager->getCache();
-
-		if (isset($cache[$text])) {
-			return $cache[$text];
-		}
-
 		foreach ($this->patterns as $pattern) {
 			if (preg_match_all($pattern, $text, $matches, PREG_SET_ORDER)) {
 				foreach ($matches as $match) {
@@ -67,8 +49,6 @@ class PlaceholderHandler
 			}
 		}
 
-		$this->cacheManager->setCache($text, $text);
-
 		return $text;
 	}
 
@@ -85,15 +65,5 @@ class PlaceholderHandler
 	public function unregister(string $placeholder): void
 	{
 		unset($this->placeholders[$placeholder]);
-	}
-
-	public function clearCacheIfExpired(): void
-	{
-		$this->cacheManager->clearCacheIfExpired();
-	}
-
-	public function getPlaceholders(): array
-	{
-		return array_keys($this->placeholders);
 	}
 }

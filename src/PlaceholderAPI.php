@@ -7,7 +7,6 @@ namespace MohamadRZ4\Placeholder;
 use MohamadRZ4\Placeholder\config\ConfigManager;
 use MohamadRZ4\Placeholder\expansion\GeneralExpansion;
 use MohamadRZ4\Placeholder\expansion\PlaceholderExpansion;
-use MohamadRZ4\Placeholder\service\cache\CacheManager;
 use MohamadRZ4\Placeholder\service\PlaceholderHandler;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
@@ -19,19 +18,107 @@ class PlaceholderAPI extends PluginBase implements Listener
 	private static ?PlaceholderAPI $instance = null;
 	private array $expansions = [];
 	private ConfigManager $configManager;
-	private CacheManager $cacheManager;
 	private PlaceholderHandler $placeholderHandler;
+
+	public function onLoad(): void
+	{
+		self::$instance = $this;
+	}
 
 	public function onEnable(): void
 	{
-		self::$instance = $this;
-
-		$this->configManager = new ConfigManager($this);
-		$this->cacheManager = new CacheManager($this->configManager->getCacheExpirationTime());
-		$this->placeholderHandler = new PlaceholderHandler($this->getConfigManager(), $this->getCacheManager());
-		$this->registerExpansion(new GeneralExpansion());
-		/*$this->runTests();*/
+		$this->initializeServices();
+		$this->registerDefaultExpansions();
+		$this->registerEvents();
 	}
+
+	private function initializeServices(): void
+	{
+		$this->configManager = new ConfigManager($this);
+		$this->placeholderHandler = new PlaceholderHandler($this->getConfigManager());
+	}
+
+	private function registerDefaultExpansions(): void
+	{
+		$this->registerExpansion(new GeneralExpansion());
+	}
+
+	private function registerEvents(): void
+	{
+		$this->getServer()->getPluginManager()->registerEvents($this, $this);
+	}
+
+	public static function getInstance(): PlaceholderAPI
+	{
+		return self::$instance;
+	}
+
+	public function registerExpansion(PlaceholderExpansion $expansion): void
+	{
+		$this->expansions[] = $expansion;
+	}
+
+	public function unregisterExpansion(string $identifier): bool
+	{
+		foreach ($this->expansions as $key => $expansion) {
+			if ($expansion->getIdentifier() === $identifier) {
+				unset($this->expansions[$key]);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public function listExpansions(): array
+	{
+		return array_map(static fn($expansion) => [
+			"identifier" => $expansion->getIdentifier(),
+			"version" => $expansion->getVersion(),
+			"author" => $expansion->getAuthor(),
+		], $this->expansions);
+	}
+
+	public function getExpansionVersion(string $identifier): ?string
+	{
+		return $this->findExpansionByIdentifier($identifier)?->getVersion();
+	}
+
+	public function getExpansionAuthor(string $identifier): ?string
+	{
+		return $this->findExpansionByIdentifier($identifier)?->getAuthor();
+	}
+
+	private function findExpansionByIdentifier(string $identifier): ?PlaceholderExpansion
+	{
+		foreach ($this->expansions as $expansion) {
+			if ($expansion->getIdentifier() === $identifier) {
+				return $expansion;
+			}
+		}
+
+		return null;
+	}
+
+	public function processPlaceholders(?Player $player, string $text): string
+	{
+		foreach ($this->expansions as $expansion) {
+			$text = $this->placeholderHandler->replacePlaceholders($player, $text, $expansion);
+		}
+
+		return $text;
+	}
+
+	public function getConfigManager(): ConfigManager
+	{
+		return $this->configManager;
+	}
+
+	public function getPlaceholderHandler(): PlaceholderHandler
+	{
+		return $this->placeholderHandler;
+	}
+}
 
 /*	public function runTests(): void
 	{
@@ -56,38 +143,53 @@ class PlaceholderAPI extends PluginBase implements Listener
 		$this->getLogger()->info("Online Players placeholder exists after unregister: " . ($existsAfterUnregister ? "Yes" : "No"));
 	}*/
 
-	public static function getInstance(): PlaceholderAPI
+/*	public function runTests(): void
 	{
-		return self::$instance;
-	}
+		$this->getLogger()->info("=== Running PlaceholderAPI Tests ===");
 
-	public function registerExpansion(PlaceholderExpansion $expansion): void
-	{
-		$this->expansions[] = $expansion;
-	}
+		$dummyExpansion = new class extends PlaceholderExpansion {
+			public function getIdentifier(): string {
+				return "dummy";
+			}
 
-	public function processPlaceholders(?Player $player, string $text): string
-	{
-		$patternMatcher = $this->getPlaceholderHandler();
-		foreach ($this->expansions as $expansion) {
-			$text = $patternMatcher->replacePlaceholders($player, $text, $expansion);
-		}
+			public function getVersion(): string {
+				return "1.0.0";
+			}
 
-		return $text;
-	}
+			public function getAuthor(): string {
+				return "Tester";
+			}
 
-	public function getConfigManager(): ConfigManager
-	{
-		return $this->configManager;
-	}
+			public function onPlaceholderRequest(?Player $player, string $params): string {
+				switch ($params) {
+					case "test":
+						return "hi";
+						break;
+				}
+				return "unknown_placeholder";
+			}
+		};
 
-	public function getCacheManager(): CacheManager
-	{
-		return $this->cacheManager;
-	}
 
-	public function getPlaceholderHandler(): PlaceholderHandler
-	{
-		return $this->placeholderHandler;
-	}
-}
+		$this->registerExpansion($dummyExpansion);
+		$this->getLogger()->info("Dummy expansion registered.");
+
+		$expansionList = $this->listExpansions();
+		$this->getLogger()->info("Registered Expansions: " . json_encode($expansionList));
+
+		$version = $this->getExpansionVersion("dummy");
+		$author = $this->getExpansionAuthor("dummy");
+		$this->getLogger()->info("Dummy expansion version: $version, author: $author");
+
+		$player = $this->getServer()->getOnlinePlayers()[0] ?? null;
+		$processedText = $this->processPlaceholders($player, "Hello, %test%");
+		$this->getLogger()->info("Processed text: $processedText");
+
+		$this->unregisterExpansion("dummy");
+		$this->getLogger()->info("Dummy expansion unregistered.");
+
+		$exists = $this->getExpansionVersion("dummy") !== null;
+		$this->getLogger()->info("Dummy expansion still exists: " . ($exists ? "Yes" : "No"));
+
+		$this->getLogger()->info("=== Tests Completed ===");
+	}*/

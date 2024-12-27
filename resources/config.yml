@@ -1,7 +1,0 @@
-# PlaceholderAPI Config
-
-# Enable or disable cache expiration
-enable_cache_expiration: true  # Set to false to disable cache expiration
-
-# The time (in seconds) after which the processed cache should be cleared
-cache_expiration_time: 60  # 5 minutes
