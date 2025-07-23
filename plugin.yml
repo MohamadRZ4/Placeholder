@@ -1,5 +1,5 @@
 name: PlaceholderAPI
-version: 2.0.2
+version: 3.0.0
 main: MohamadRZ4\Placeholder\PlaceholderAPI
 api: 5.0.0
 src-namespace-prefix: MohamadRZ4\Placeholder
@@ -13,3 +13,18 @@ description: "|
 author: MohamadRZ4
 repository: https://github.com/MohamadRZ4/Placeholder
 bugs: https://github.com/MohamadRZ4/Placeholder/issues
+
+permissions:
+  placeholderapi.admin:
+    description: "Full access to PlaceholderAPI commands"
+    default: op
+  placeholderapi.use:
+    description: "Use PlaceholderAPI features"
+    default: true
+
+commands:
+  placeholderapi:
+    description: "Main PlaceholderAPI command"
+    usage: "/placeholderapi <reload|list|test> [args]"
+    permission: placeholderapi.admin
+    aliases: ["papi"]

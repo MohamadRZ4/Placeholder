@@ -5,191 +5,244 @@ declare(strict_types=1);
 namespace MohamadRZ4\Placeholder;
 
 use MohamadRZ4\Placeholder\config\ConfigManager;
-use MohamadRZ4\Placeholder\expansion\GeneralExpansion;
 use MohamadRZ4\Placeholder\expansion\PlaceholderExpansion;
-use MohamadRZ4\Placeholder\service\PlaceholderHandler;
+use MohamadRZ4\Placeholder\expansion\PlayerExpansion;
+use MohamadRZ4\Placeholder\expansion\ServerExpansion;
+use MohamadRZ4\Placeholder\expansion\TimeExpansion;
+use pocketmine\command\Command;
+use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
+use pocketmine\scheduler\ClosureTask;
 
-class PlaceholderAPI extends PluginBase implements Listener
-{
-	private static ?PlaceholderAPI $instance = null;
-	private array $expansions = [];
-	private ConfigManager $configManager;
-	private PlaceholderHandler $placeholderHandler;
+class PlaceholderAPI extends PluginBase implements Listener {
 
-	public function onLoad(): void
-	{
-		self::$instance = $this;
-	}
+    private $config;
+    private $expansions = [];
+    private $playerData = [];
 
-	public function onEnable(): void
-	{
-		$this->initializeServices();
-		$this->registerDefaultExpansions();
-		$this->registerEvents();
-	}
+    public function onEnable(): void {
+        $this->saveDefaultConfig();
+        $this->config = $this->getConfig();
+        $this->getServer()->getPluginManager()->registerEvents($this, $this);
 
-	private function initializeServices(): void
-	{
-		$this->configManager = new ConfigManager($this);
-		$this->placeholderHandler = new PlaceholderHandler($this->getConfigManager());
-	}
+        $this->loadDefaultExpansions();
 
-	private function registerDefaultExpansions(): void
-	{
-		$this->registerExpansion(new GeneralExpansion());
-	}
+        $this->getScheduler()->scheduleRepeatingTask(new ClosureTask(function(): void {
+            $this->updateExpansions();
+        }), 20);
+    }
 
-	private function registerEvents(): void
-	{
-		$this->getServer()->getPluginManager()->registerEvents($this, $this);
-	}
+    private function loadDefaultExpansions(): void {
+        $this->registerExpansion(new PlayerExpansion());
+        $this->registerExpansion(new ServerExpansion());
+        $this->registerExpansion(new TimeExpansion());
+    }
 
-	public static function getInstance(): PlaceholderAPI
-	{
-		return self::$instance;
-	}
+    private function updateExpansions(): void {
+        foreach ($this->expansions as $expansion) {
+            if ($expansion instanceof PlaceholderExpansion) {
+                $expansion->update();
+            }
+        }
+    }
 
-	public function registerExpansion(PlaceholderExpansion $expansion): void
-	{
-		$this->expansions[] = $expansion;
-	}
+    public function onPlayerJoin(PlayerJoinEvent $event): void {
+        $player = $event->getPlayer();
+        $this->playerData[$player->getName()] = [
+            "join_time" => time(),
+            "last_seen" => time()
+        ];
+    }
 
-	public function unregisterExpansion(string $identifier): bool
-	{
-		foreach ($this->expansions as $key => $expansion) {
-			if ($expansion->getIdentifier() === $identifier) {
-				unset($this->expansions[$key]);
-				return true;
-			}
-		}
+    public function onPlayerQuit(PlayerQuitEvent $event): void {
+        $player = $event->getPlayer();
+        if (isset($this->playerData[$player->getName()])) {
+            unset($this->playerData[$player->getName()]);
+        }
+    }
 
-		return false;
-	}
+    public function registerExpansion(PlaceholderExpansion $expansion): bool {
+        $identifier = $expansion->getIdentifier();
 
-	public function listExpansions(): array
-	{
-		return array_map(static fn($expansion) => [
-			"identifier" => $expansion->getIdentifier(),
-			"version" => $expansion->getVersion(),
-			"author" => $expansion->getAuthor(),
-		], $this->expansions);
-	}
+        if (isset($this->expansions[$identifier])) {
+            return false;
+        }
 
-	public function getExpansionVersion(string $identifier): ?string
-	{
-		return $this->findExpansionByIdentifier($identifier)?->getVersion();
-	}
+        $this->expansions[$identifier] = $expansion;
+        $expansion->onRegister($this);
 
-	public function getExpansionAuthor(string $identifier): ?string
-	{
-		return $this->findExpansionByIdentifier($identifier)?->getAuthor();
-	}
+        return true;
+    }
 
-	private function findExpansionByIdentifier(string $identifier): ?PlaceholderExpansion
-	{
-		foreach ($this->expansions as $expansion) {
-			if ($expansion->getIdentifier() === $identifier) {
-				return $expansion;
-			}
-		}
+    public function unregisterExpansion(string $identifier): bool {
+        if (!isset($this->expansions[$identifier])) {
+            return false;
+        }
 
-		return null;
-	}
+        $expansion = $this->expansions[$identifier];
+        if ($expansion instanceof PlaceholderExpansion) {
+            $expansion->onUnregister();
+        }
 
-	public function processPlaceholders(?Player $player, string $text): string
-	{
-		foreach ($this->expansions as $expansion) {
-			$text = $this->placeholderHandler->replacePlaceholders($player, $text, $expansion);
-		}
+        unset($this->expansions[$identifier]);
+        return true;
+    }
 
-		return $text;
-	}
+    public function getExpansions(): array {
+        return $this->expansions;
+    }
 
-	public function getConfigManager(): ConfigManager
-	{
-		return $this->configManager;
-	}
+    public function getExpansion(string $identifier): ?PlaceholderExpansion {
+        return $this->expansions[$identifier] ?? null;
+    }
 
-	public function getPlaceholderHandler(): PlaceholderHandler
-	{
-		return $this->placeholderHandler;
-	}
+    public function parsePlaceholders(string $text, ?Player $player = null): string {
+        return preg_replace_callback('/%([a-zA-Z0-9]+)_([a-zA-Z0-9_]+)%/', function ($matches) use ($player) {
+            $identifier = $matches[1];
+            $placeholder = $matches[2];
+
+            if (!isset($this->expansions[$identifier])) {
+                return $matches[0];
+            }
+
+            $expansion = $this->expansions[$identifier];
+            if ($expansion instanceof PlaceholderExpansion) {
+                $result = $expansion->onPlaceholderRequest($player, $placeholder);
+                return $result !== null ? (string)$result : $matches[0];
+            }
+
+            return $matches[0];
+        }, $text);
+    }
+
+    public function setPlaceholder(string $identifier, string $placeholder, $value): bool {
+        if (!isset($this->expansions[$identifier])) {
+            return false;
+        }
+
+        $expansion = $this->expansions[$identifier];
+        if ($expansion instanceof PlaceholderExpansion) {
+            return $expansion->setPlaceholder($placeholder, $value);
+        }
+
+        return false;
+    }
+
+    public function getPlaceholderValue(string $identifier, string $placeholder, ?Player $player = null): ?string {
+        if (!isset($this->expansions[$identifier])) {
+            return null;
+        }
+
+        $expansion = $this->expansions[$identifier];
+        if ($expansion instanceof PlaceholderExpansion) {
+            return $expansion->onPlaceholderRequest($player, $placeholder);
+        }
+
+        return null;
+    }
+
+    public function getAllPlaceholders(): array {
+        $placeholders = [];
+
+        foreach ($this->expansions as $identifier => $expansion) {
+            if ($expansion instanceof PlaceholderExpansion) {
+                $expansionPlaceholders = $expansion->getPlaceholders();
+                foreach ($expansionPlaceholders as $placeholder) {
+                    $placeholders[] = "%{$identifier}_{$placeholder}%";
+                }
+            }
+        }
+
+        return $placeholders;
+    }
+
+    public function getPlayerData(string $playerName): ?array {
+        return $this->playerData[$playerName] ?? null;
+    }
+
+    public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool {
+        if ($command->getName() === "placeholderapi") {
+            if (!$sender->hasPermission("placeholderapi.admin")) {
+                $sender->sendMessage("§cYou don't have permission to use this command!");
+                return true;
+            }
+
+            if (empty($args)) {
+                $sender->sendMessage("§aPlaceholderAPI Commands:");
+                $sender->sendMessage("§7/papi reload - Reload the plugin");
+                $sender->sendMessage("§7/papi list - List all expansions");
+                $sender->sendMessage("§7/papi parse <text> - Parse placeholders in text");
+                $sender->sendMessage("§7/papi test <expansion> <placeholder> - Test a placeholder");
+                return true;
+            }
+
+            switch (strtolower($args[0])) {
+                case "reload":
+                    $this->reloadConfig();
+                    $sender->sendMessage("§aPlaceholderAPI has been reloaded!");
+                    break;
+
+                case "list":
+                    $sender->sendMessage("§aRegistered Expansions:");
+                    foreach ($this->expansions as $identifier => $expansion) {
+                        $version = $expansion instanceof PlaceholderExpansion ? $expansion->getVersion() : "Unknown";
+                        $author = $expansion instanceof PlaceholderExpansion ? $expansion->getAuthor() : "Unknown";
+                        $sender->sendMessage("§7- {$identifier} v{$version} by {$author}");
+                    }
+                    break;
+
+                case "parse":
+                    if (count($args) < 2) {
+                        $sender->sendMessage("§cUsage: /papi parse <text>");
+                        return true;
+                    }
+
+                    $text = implode(" ", array_slice($args, 1));
+                    $player = $sender instanceof Player ? $sender : null;
+                    $parsed = $this->parsePlaceholders($text, $player);
+                    $sender->sendMessage("§aOriginal: §f{$text}");
+                    $sender->sendMessage("§aParsed: §f{$parsed}");
+                    break;
+
+                case "test":
+                    if (count($args) < 3) {
+                        $sender->sendMessage("§cUsage: /papi test <expansion> <placeholder>");
+                        return true;
+                    }
+
+                    $identifier = $args[1];
+                    $placeholder = $args[2];
+                    $player = $sender instanceof Player ? $sender : null;
+
+                    $result = $this->getPlaceholderValue($identifier, $placeholder, $player);
+                    if ($result !== null) {
+                        $sender->sendMessage("§aResult: §f{$result}");
+                    } else {
+                        $sender->sendMessage("§cPlaceholder not found or returned null");
+                    }
+                    break;
+
+                default:
+                    $sender->sendMessage("§cUnknown subcommand: {$args[0]}");
+                    break;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function getAPI(): ?PlaceholderAPI {
+        return self::getInstance();
+    }
+
+    private static function getInstance(): ?PlaceholderAPI {
+        $plugin = \pocketmine\Server::getInstance()->getPluginManager()->getPlugin("PlaceholderAPI");
+        return $plugin instanceof PlaceholderAPI ? $plugin : null;
+    }
 }
-
-/*	public function runTests(): void
-	{
-		$patternMatcher = $this->getPlaceholderHandler();
-		$player = $this->getServer()->getOnlinePlayers()[0] ?? null;
-
-		$text = "%online_players%/%max_players%";
-		$processedText = $this->processPlaceholders($player, $text);
-		$this->getLogger()->info("Processed Text: " . $processedText);
-
-
-		$onlinePlayers = $patternMatcher->get('%online_players%');
-		$this->getLogger()->info("Online Players: " . ($onlinePlayers ?? "Not found"));
-
-		$exists = $patternMatcher->exist('%max_players%');
-		$this->getLogger()->info("Max Players placeholder exists: " . ($exists ? "Yes" : "No"));
-
-		$patternMatcher->unregister('%online_players%');
-		$this->getLogger()->info("After unregistering %online_players%");
-
-		$existsAfterUnregister = $patternMatcher->exist('%online_players%');
-		$this->getLogger()->info("Online Players placeholder exists after unregister: " . ($existsAfterUnregister ? "Yes" : "No"));
-	}*/
-
-/*	public function runTests(): void
-	{
-		$this->getLogger()->info("=== Running PlaceholderAPI Tests ===");
-
-		$dummyExpansion = new class extends PlaceholderExpansion {
-			public function getIdentifier(): string {
-				return "dummy";
-			}
-
-			public function getVersion(): string {
-				return "1.0.0";
-			}
-
-			public function getAuthor(): string {
-				return "Tester";
-			}
-
-			public function onPlaceholderRequest(?Player $player, string $params): string {
-				switch ($params) {
-					case "test":
-						return "hi";
-						break;
-				}
-				return "unknown_placeholder";
-			}
-		};
-
-
-		$this->registerExpansion($dummyExpansion);
-		$this->getLogger()->info("Dummy expansion registered.");
-
-		$expansionList = $this->listExpansions();
-		$this->getLogger()->info("Registered Expansions: " . json_encode($expansionList));
-
-		$version = $this->getExpansionVersion("dummy");
-		$author = $this->getExpansionAuthor("dummy");
-		$this->getLogger()->info("Dummy expansion version: $version, author: $author");
-
-		$player = $this->getServer()->getOnlinePlayers()[0] ?? null;
-		$processedText = $this->processPlaceholders($player, "Hello, %test%");
-		$this->getLogger()->info("Processed text: $processedText");
-
-		$this->unregisterExpansion("dummy");
-		$this->getLogger()->info("Dummy expansion unregistered.");
-
-		$exists = $this->getExpansionVersion("dummy") !== null;
-		$this->getLogger()->info("Dummy expansion still exists: " . ($exists ? "Yes" : "No"));
-
-		$this->getLogger()->info("=== Tests Completed ===");
-	}*/
