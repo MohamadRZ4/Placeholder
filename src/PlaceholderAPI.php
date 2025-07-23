@@ -238,7 +238,7 @@ class PlaceholderAPI extends PluginBase implements Listener {
         return self::getInstance();
     }
 
-    private static function getInstance(): ?PlaceholderAPI {
+    public static function getInstance(): ?PlaceholderAPI {
         $plugin = \pocketmine\Server::getInstance()->getPluginManager()->getPlugin("PlaceholderAPI");
         return $plugin instanceof PlaceholderAPI ? $plugin : null;
     }
