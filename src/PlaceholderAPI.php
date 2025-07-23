@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MohamadRZ4\Placeholder;
 
-use MohamadRZ4\Placeholder\config\ConfigManager;
 use MohamadRZ4\Placeholder\expansion\PlaceholderExpansion;
 use MohamadRZ4\Placeholder\expansion\PlayerExpansion;
 use MohamadRZ4\Placeholder\expansion\ServerExpansion;
@@ -20,13 +19,11 @@ use pocketmine\scheduler\ClosureTask;
 
 class PlaceholderAPI extends PluginBase implements Listener {
 
-    private $config;
     private $expansions = [];
     private $playerData = [];
 
     public function onEnable(): void {
         $this->saveDefaultConfig();
-        $this->config = $this->getConfig();
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
 
         $this->loadDefaultExpansions();
